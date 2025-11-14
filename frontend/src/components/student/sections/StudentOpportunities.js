@@ -167,183 +167,130 @@ function StudentOpportunities() {
             <Card 
               key={job._id}
               sx={{ 
+                maxWidth: '360px',
                 height: '100%',
+                minHeight: '450px',
                 display: 'flex',
                 flexDirection: 'column',
-                transition: 'all 0.3s ease-in-out',
+                transition: 'all 0.2s ease-in-out',
                 '&:hover': {
-                  transform: 'translateY(-5px)',
-                  boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
+                  transform: 'translateY(-2px)',
+                  boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
                 },
-                bgcolor: 'background.paper',
+                bgcolor: '#111827',
                 border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 2,
+                borderColor: '#1f2937',
+                borderRadius: '12px',
+                boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
               }}
             >
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                  <Box>
-                    <Typography variant="h6" component="h2" sx={{ 
-                      fontWeight: 'bold',
-                      color: 'primary.main',
-                      mb: 1
-                    }}>
-                      {job.projectTitle}
-                    </Typography>
-                    <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-                      <Chip
-                        icon={<Business />}
-                        label={job.category}
-                        variant="outlined"
-                        size="small"
-                        sx={{ 
-                          color: 'primary.main',
-                          borderColor: 'primary.main',
-                          backgroundColor: 'transparent'
-                        }}
-                      />
-                      <Chip
-                        icon={<AttachMoney />}
-                        label={`${job.budget} (${job.paymentType})`}
-                        variant="outlined"
-                        size="small"
-                        sx={{ 
-                          color: 'primary.main',
-                          borderColor: 'primary.main',
-                          backgroundColor: 'transparent'
-                        }}
-                      />
-                      <Chip
-                        icon={<AccessTime />}
-                        label={`${job.experienceLevel} Level`}
-                        variant="outlined"
-                        size="small"
-                        sx={{ 
-                          color: 'primary.main',
-                          borderColor: 'primary.main',
-                          backgroundColor: 'transparent'
-                        }}
-                      />
-                    </Stack>
-                  </Box>
-                </Box>
-
-                {/* Posted By Alumni Section */}
+              <CardContent sx={{ flexGrow: 1, p: 2, display: 'flex', flexDirection: 'column', gap: 2, overflow: 'hidden' }}>
+                {/* Posted By Alumni Header */}
                 {job.postedBy && (
                   <Box sx={{ 
-                    mb: 2, 
-                    p: 2, 
-                    bgcolor: 'primary.light', 
-                    borderRadius: 2,
-                    border: '1px solid',
-                    borderColor: 'primary.main',
-                    opacity: 0.9
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 1.5,
+                    p: 1.5,
+                    bgcolor: '#1f2937',
+                    borderRadius: '8px',
                   }}>
-                    <Typography variant="subtitle2" gutterBottom sx={{ 
-                      fontWeight: 'bold',
-                      color: 'primary.dark',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 1,
-                      mb: 1.5
-                    }}>
-                      <Person fontSize="small" />
-                      Posted by Alumni
-                    </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar
-                        src={job.postedBy.profile?.profileImage ? 
-                          (job.postedBy.profile.profileImage.startsWith('http') 
-                            ? job.postedBy.profile.profileImage 
-                            : `http://localhost:3002/${job.postedBy.profile.profileImage}`) 
-                          : undefined}
-                        alt={job.postedBy.name}
-                        sx={{
-                          width: 56,
-                          height: 56,
-                          border: '2px solid',
-                          borderColor: 'primary.main',
-                          bgcolor: 'primary.main',
-                          fontSize: '1.5rem',
-                          fontWeight: 'bold'
-                        }}
-                      >
-                        {!job.postedBy.profile?.profileImage && job.postedBy.name?.charAt(0)?.toUpperCase()}
-                      </Avatar>
-                      <Box sx={{ flex: 1 }}>
-                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}>
-                          {job.postedBy.name}
-                        </Typography>
-                        {job.postedBy.profile?.currentStatus && (
-                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                            {job.postedBy.profile.currentStatus}
-                          </Typography>
-                        )}
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                          {job.postedBy.email && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <Email fontSize="small" sx={{ color: 'text.secondary' }} />
-                              <Typography variant="caption" color="text.secondary">
-                                {job.postedBy.email}
-                              </Typography>
-                            </Box>
-                          )}
-                          {job.postedBy.profile?.location && (
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                              <LocationOn fontSize="small" sx={{ color: 'text.secondary' }} />
-                              <Typography variant="caption" color="text.secondary">
-                                {job.postedBy.profile.location}
-                              </Typography>
-                            </Box>
-                          )}
-                          {job.postedBy.profile?.socialLinks?.linkedin && (
-                            <Box 
-                              component="a"
-                              href={job.postedBy.profile.socialLinks.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              sx={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                gap: 0.5,
-                                textDecoration: 'none',
-                                color: 'primary.main',
-                                '&:hover': { textDecoration: 'underline' }
-                              }}
-                            >
-                              <LinkedIn fontSize="small" />
-                              <Typography variant="caption">
-                                LinkedIn
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                        {job.postedBy.profile?.college && (
-                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                            <School fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
-                            {job.postedBy.profile.college}
-                            {job.postedBy.profile.graduationYear && ` • ${job.postedBy.profile.graduationYear}`}
-                          </Typography>
-                        )}
-                      </Box>
+                    <Avatar
+                      src={job.postedBy.profile?.profileImage ? 
+                        (job.postedBy.profile.profileImage.startsWith('http') 
+                          ? job.postedBy.profile.profileImage 
+                          : `http://localhost:3002/${job.postedBy.profile.profileImage}`) 
+                        : undefined}
+                      alt={job.postedBy.name}
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        bgcolor: '#7c3aed',
+                        fontSize: '0.875rem',
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      {!job.postedBy.profile?.profileImage && job.postedBy.name?.charAt(0)?.toUpperCase()}
+                    </Avatar>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                      <Typography variant="body2" sx={{ 
+                        fontWeight: 500, 
+                        color: '#f9fafb',
+                        fontSize: '0.875rem',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        Posted by {job.postedBy.name} <span style={{ color: '#9ca3af' }}>(Alumni)</span>
+                      </Typography>
                     </Box>
+                    <Person sx={{ fontSize: '1rem', color: '#9ca3af' }} />
                   </Box>
                 )}
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ 
-                    fontWeight: 'medium',
-                    color: 'text.primary',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
-                  }}>
-                    <Description fontSize="small" />
-                    Project Description
-                  </Typography>
-                  <Typography variant="body2" paragraph sx={{ 
-                    color: 'text.secondary',
+                {/* Project Title */}
+                <Typography variant="h6" component="h2" sx={{ 
+                  fontWeight: 600,
+                  color: '#f9fafb',
+                  fontSize: '1.125rem',
+                  lineHeight: 1.4,
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}>
+                  {job.projectTitle}
+                </Typography>
+
+                {/* Category, Budget, Level Chips */}
+                <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                  <Chip
+                    icon={<Business sx={{ fontSize: '0.875rem', color: '#7c3aed' }} />}
+                    label={job.category}
+                    size="small"
+                    sx={{ 
+                      height: '24px',
+                      fontSize: '0.75rem',
+                      bgcolor: '#1f2937',
+                      color: '#e5e7eb',
+                      border: '1px solid #374151',
+                      '& .MuiChip-icon': { color: '#7c3aed' }
+                    }}
+                  />
+                  <Chip
+                    icon={<AttachMoney sx={{ fontSize: '0.875rem', color: '#7c3aed' }} />}
+                    label={`${job.budget} (${job.paymentType})`}
+                    size="small"
+                    sx={{ 
+                      height: '24px',
+                      fontSize: '0.75rem',
+                      bgcolor: '#1f2937',
+                      color: '#e5e7eb',
+                      border: '1px solid #374151',
+                      '& .MuiChip-icon': { color: '#7c3aed' }
+                    }}
+                  />
+                  <Chip
+                    icon={<AccessTime sx={{ fontSize: '0.875rem', color: '#7c3aed' }} />}
+                    label={`${job.experienceLevel}`}
+                    size="small"
+                    sx={{ 
+                      height: '24px',
+                      fontSize: '0.75rem',
+                      bgcolor: '#1f2937',
+                      color: '#e5e7eb',
+                      border: '1px solid #374151',
+                      '& .MuiChip-icon': { color: '#7c3aed' }
+                    }}
+                  />
+                </Stack>
+
+                {/* Project Description */}
+                <Box>
+                  <Typography variant="body2" sx={{ 
+                    color: '#d1d5db',
+                    fontSize: '0.875rem',
+                    lineHeight: 1.5,
                     display: '-webkit-box',
                     WebkitLineClamp: 3,
                     WebkitBoxOrient: 'vertical',
@@ -353,50 +300,49 @@ function StudentOpportunities() {
                   </Typography>
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ 
-                    fontWeight: 'medium',
-                    color: 'text.primary',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
-                  }}>
-                    <Description fontSize="small" />
-                    Required Skills
-                  </Typography>
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                    {job.requiredSkills.map((skill, index) => (
+                {/* Required Skills */}
+                <Box>
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                    {job.requiredSkills.slice(0, 4).map((skill, index) => (
                       <Chip
                         key={index}
                         label={skill}
                         size="small"
-                        variant="outlined"
                         sx={{ 
-                          borderColor: 'primary.main',
-                          color: 'primary.main',
+                          height: '22px',
+                          fontSize: '0.7rem',
+                          bgcolor: '#1f2937',
+                          color: '#7c3aed',
+                          border: '1px solid #7c3aed',
                           '&:hover': {
-                            bgcolor: 'primary.main',
-                            color: 'white'
+                            bgcolor: '#7c3aed',
+                            color: '#ffffff'
                           }
                         }}
                       />
                     ))}
+                    {job.requiredSkills.length > 4 && (
+                      <Chip
+                        label={`+${job.requiredSkills.length - 4}`}
+                        size="small"
+                        sx={{ 
+                          height: '22px',
+                          fontSize: '0.7rem',
+                          bgcolor: '#1f2937',
+                          color: '#9ca3af',
+                          border: '1px solid #374151'
+                        }}
+                      />
+                    )}
                   </Box>
                 </Box>
 
-                <Box sx={{ mb: 2 }}>
-                  <Typography variant="subtitle1" gutterBottom sx={{ 
-                    fontWeight: 'medium',
-                    color: 'text.primary',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 1
-                  }}>
-                    <Description fontSize="small" />
-                    Deliverables
-                  </Typography>
-                  <Typography variant="body2" paragraph sx={{ 
-                    color: 'text.secondary',
+                {/* Deliverables */}
+                <Box>
+                  <Typography variant="body2" sx={{ 
+                    color: '#9ca3af',
+                    fontSize: '0.8125rem',
+                    lineHeight: 1.4,
                     display: '-webkit-box',
                     WebkitLineClamp: 2,
                     WebkitBoxOrient: 'vertical',
@@ -406,82 +352,66 @@ function StudentOpportunities() {
                   </Typography>
                 </Box>
 
+                {/* Date Info */}
                 <Box sx={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(2, 1fr)', 
-                  gap: 2,
-                  mb: 2
+                  display: 'flex', 
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  fontSize: '0.75rem',
+                  color: '#9ca3af'
                 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <CalendarMonth sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Start: {new Date(job.startDate).toLocaleDateString()}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <CalendarMonth sx={{ fontSize: '0.875rem' }} />
+                    <Typography variant="caption">
+                      {new Date(job.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </Typography>
                   </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <AccessTime sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Deadline: {new Date(job.deadline).toLocaleDateString()}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <EventAvailable sx={{ fontSize: '0.875rem' }} />
+                    <Typography variant="caption">
+                      Apply by {new Date(job.applicationDeadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                     </Typography>
                   </Box>
-                  {job.estimatedHoursPerWeek && (
-                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                      <Timer sx={{ mr: 1, color: 'text.secondary' }} />
-                      <Typography variant="body2" color="text.secondary">
-                        {job.estimatedHoursPerWeek} hrs/week
-                      </Typography>
-                    </Box>
-                  )}
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <EventAvailable sx={{ mr: 1, color: 'text.secondary' }} />
-                    <Typography variant="body2" color="text.secondary">
-                      Apply by: {new Date(job.applicationDeadline).toLocaleDateString()}
-                    </Typography>
-                  </Box>
-                </Box>
-
-                <Box sx={{ display: 'flex', alignItems: 'center', color: 'text.secondary' }}>
-                  <AccessTime sx={{ mr: 1 }} />
-                  <Typography variant="caption">
-                    Posted: {new Date(job.createdAt).toLocaleDateString()}
-                  </Typography>
                 </Box>
               </CardContent>
 
-              <CardActions sx={{ p: 2, pt: 0 }}>
+              <CardActions sx={{ p: 2, pt: 0, mt: 'auto', flexShrink: 0 }}>
                 <Box sx={{ width: '100%' }}>
                   {(() => {
                     const status = applicationStatuses[job._id];
-                    let bgColor = '#1976d2'; // default primary blue
-                    let hoverColor = '#1565c0';
-                    let disabledColor = '#1976d2';
+                    let bgColor = '#7c3aed'; // default purple
+                    let hoverColor = '#6d28d9';
+                    let disabledColor = '#7c3aed';
                     
                     if (status === 'pending') {
-                      bgColor = '#9e9e9e'; // grey
-                      hoverColor = '#757575';
-                      disabledColor = '#bdbdbd';
+                      bgColor = '#6b7280'; // grey
+                      hoverColor = '#4b5563';
+                      disabledColor = '#6b7280';
                     } else if (status === 'accepted') {
-                      bgColor = '#4caf50'; // green
-                      hoverColor = '#388e3c';
-                      disabledColor = '#4caf50';
+                      bgColor = '#10b981'; // green
+                      hoverColor = '#059669';
+                      disabledColor = '#10b981';
                     } else if (status === 'rejected') {
-                      bgColor = '#f44336'; // red
-                      hoverColor = '#d32f2f';
-                      disabledColor = '#f44336';
+                      bgColor = '#ef4444'; // red
+                      hoverColor = '#dc2626';
+                      disabledColor = '#ef4444';
                     }
                     
                     return (
                       <Button
                         fullWidth
                         onClick={() => handleApply(job._id)}
-                        startIcon={!status ? <Star /> : null}
+                        startIcon={!status ? <Star sx={{ fontSize: '1rem' }} /> : null}
                         disabled={getButtonProps(job._id).disabled}
                         style={{
                           backgroundColor: bgColor,
                           color: '#ffffff',
                           textTransform: 'none',
                           fontWeight: 500,
-                          boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)',
+                          fontSize: '0.875rem',
+                          height: '40px',
+                          borderRadius: '12px',
+                          boxShadow: 'none',
                         }}
                         onMouseEnter={(e) => {
                           if (!getButtonProps(job._id).disabled) {
@@ -499,6 +429,7 @@ function StudentOpportunities() {
                           '&.Mui-disabled': {
                             backgroundColor: `${disabledColor} !important`,
                             color: '#ffffff !important',
+                            opacity: 0.8
                           }
                         }}
                       >

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { CircularProgress, Alert, Chip, Box, Typography, Card, CardContent, CardActions, Button, Grid, Stack } from '@mui/material';
-import { LocationOn, Business, AccessTime, Work, School, AttachMoney, Star, Description, CalendarMonth, EventAvailable, Timer, CheckCircle, Cancel, HourglassEmpty } from '@mui/icons-material';
+import { CircularProgress, Alert, Chip, Box, Typography, Card, CardContent, CardActions, Button, Grid, Stack, Avatar } from '@mui/material';
+import { LocationOn, Business, AccessTime, Work, School, AttachMoney, Star, Description, CalendarMonth, EventAvailable, Timer, Person, Email, LinkedIn } from '@mui/icons-material';
 import axios from '../../../utils/axiosConfig';
 
 function StudentOpportunities() {
@@ -11,17 +11,25 @@ function StudentOpportunities() {
 
   useEffect(() => {
     fetchOpportunities();
-    fetchApplicationStatuses();
   }, []);
 
-  const fetchApplicationStatuses = async () => {
+  const fetchApplicationStatuses = async (opportunityIds) => {
     try {
-      const response = await axios.get('/job-applications/my-applications');
-      
-      // Create a map of jobId to application status
+      // Fetch status for each opportunity
+      const statusPromises = opportunityIds.map(async (id) => {
+        try {
+          const response = await axios.get(`/job-applications/${id}/check-application`);
+          return { id, status: response.data.status };
+        } catch (error) {
+          console.error(`Error fetching status for opportunity ${id}:`, error);
+          return { id, status: null };
+        }
+      });
+
+      const statusResults = await Promise.all(statusPromises);
       const statusMap = {};
-      response.data.forEach(app => {
-        statusMap[app.jobId] = app.status;
+      statusResults.forEach(({ id, status }) => {
+        statusMap[id] = status;
       });
       setApplicationStatuses(statusMap);
     } catch (error) {
@@ -35,7 +43,10 @@ function StudentOpportunities() {
     try {
       const response = await axios.get('/jobs');
       setOpportunities(response.data);
-      await fetchApplicationStatuses(); // Fetch application statuses after getting jobs
+      
+      // Fetch application statuses for all opportunities
+      const opportunityIds = response.data.map(job => job._id);
+      await fetchApplicationStatuses(opportunityIds);
     } catch (error) {
       console.error('Error fetching jobs:', error);
       setError('Failed to fetch jobs. Please try again later.');
@@ -48,7 +59,7 @@ function StudentOpportunities() {
     try {
       // Check if already applied
       if (applicationStatuses[jobId]) {
-        alert('You have already applied for this job.');
+        alert('You have already applied for this opportunity.');
         return;
       }
 
@@ -56,18 +67,18 @@ function StudentOpportunities() {
       const response = await axios.post(`/job-applications/${jobId}/apply`);
 
       if (response.data) {
-        // Update the application status for this job
+        // Immediately update the application status to pending
         setApplicationStatuses(prev => ({
           ...prev,
           [jobId]: 'pending'
         }));
         
-        alert('Successfully applied for the position!');
-        fetchOpportunities();
+        // Optionally show a success message (can be removed if not needed)
+        // alert('Application submitted successfully!');
       }
     } catch (error) {
       console.error('Error applying for job:', error);
-      let errorMessage = 'Failed to apply for the job. ';
+      let errorMessage = 'Failed to apply for the opportunity. ';
       if (error.response?.data?.message) {
         errorMessage += error.response.data.message;
       } else if (error.message) {
@@ -82,92 +93,46 @@ function StudentOpportunities() {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  const getStatusChip = (status) => {
-    switch (status) {
-      case 'accepted':
-        return (
-          <Chip
-            icon={<CheckCircle />}
-            label="Accepted"
-            color="success"
-            sx={{ 
-              bgcolor: 'success.light',
-              color: 'success.dark',
-              '& .MuiChip-icon': { color: 'success.dark' }
-            }}
-          />
-        );
-      case 'rejected':
-        return (
-          <Chip
-            icon={<Cancel />}
-            label="Rejected"
-            color="error"
-            sx={{ 
-              bgcolor: 'error.light',
-              color: 'error.dark',
-              '& .MuiChip-icon': { color: 'error.dark' }
-            }}
-          />
-        );
-      case 'pending':
-        return (
-          <Chip
-            icon={<HourglassEmpty />}
-            label="Under Review"
-            color="warning"
-            sx={{ 
-              bgcolor: 'warning.light',
-              color: 'warning.dark',
-              '& .MuiChip-icon': { color: 'warning.dark' }
-            }}
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   const getButtonProps = (jobId) => {
     const status = applicationStatuses[jobId];
     
     if (!status) {
       return {
-        text: 'Apply Now',
+        text: 'Apply',
         color: 'primary',
         disabled: false,
-        showStatus: false
+        variant: 'contained'
       };
     }
 
     switch (status) {
       case 'accepted':
         return {
-          text: 'Application Accepted',
+          text: 'Accepted',
           color: 'success',
           disabled: true,
-          showStatus: true
+          variant: 'contained'
         };
       case 'pending':
         return {
-          text: 'Under Review',
-          color: 'warning',
+          text: 'Pending',
+          color: 'secondary',
           disabled: true,
-          showStatus: true
+          variant: 'contained'
         };
       case 'rejected':
         return {
-          text: 'Application Rejected',
+          text: 'Rejected',
           color: 'error',
           disabled: true,
-          showStatus: true
+          variant: 'contained'
         };
       default:
         return {
-          text: 'Apply Now',
+          text: 'Apply',
           color: 'primary',
           disabled: false,
-          showStatus: false
+          variant: 'contained'
         };
     }
   };
@@ -263,6 +228,108 @@ function StudentOpportunities() {
                     </Stack>
                   </Box>
                 </Box>
+
+                {/* Posted By Alumni Section */}
+                {job.postedBy && (
+                  <Box sx={{ 
+                    mb: 2, 
+                    p: 2, 
+                    bgcolor: 'primary.light', 
+                    borderRadius: 2,
+                    border: '1px solid',
+                    borderColor: 'primary.main',
+                    opacity: 0.9
+                  }}>
+                    <Typography variant="subtitle2" gutterBottom sx={{ 
+                      fontWeight: 'bold',
+                      color: 'primary.dark',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1,
+                      mb: 1.5
+                    }}>
+                      <Person fontSize="small" />
+                      Posted by Alumni
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                      <Avatar
+                        src={job.postedBy.profile?.profileImage ? 
+                          (job.postedBy.profile.profileImage.startsWith('http') 
+                            ? job.postedBy.profile.profileImage 
+                            : `http://localhost:3002/${job.postedBy.profile.profileImage}`) 
+                          : undefined}
+                        alt={job.postedBy.name}
+                        sx={{
+                          width: 56,
+                          height: 56,
+                          border: '2px solid',
+                          borderColor: 'primary.main',
+                          bgcolor: 'primary.main',
+                          fontSize: '1.5rem',
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {!job.postedBy.profile?.profileImage && job.postedBy.name?.charAt(0)?.toUpperCase()}
+                      </Avatar>
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'text.primary', mb: 0.5 }}>
+                          {job.postedBy.name}
+                        </Typography>
+                        {job.postedBy.profile?.currentStatus && (
+                          <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                            {job.postedBy.profile.currentStatus}
+                          </Typography>
+                        )}
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                          {job.postedBy.email && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <Email fontSize="small" sx={{ color: 'text.secondary' }} />
+                              <Typography variant="caption" color="text.secondary">
+                                {job.postedBy.email}
+                              </Typography>
+                            </Box>
+                          )}
+                          {job.postedBy.profile?.location && (
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                              <LocationOn fontSize="small" sx={{ color: 'text.secondary' }} />
+                              <Typography variant="caption" color="text.secondary">
+                                {job.postedBy.profile.location}
+                              </Typography>
+                            </Box>
+                          )}
+                          {job.postedBy.profile?.socialLinks?.linkedin && (
+                            <Box 
+                              component="a"
+                              href={job.postedBy.profile.socialLinks.linkedin}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                gap: 0.5,
+                                textDecoration: 'none',
+                                color: 'primary.main',
+                                '&:hover': { textDecoration: 'underline' }
+                              }}
+                            >
+                              <LinkedIn fontSize="small" />
+                              <Typography variant="caption">
+                                LinkedIn
+                              </Typography>
+                            </Box>
+                          )}
+                        </Box>
+                        {job.postedBy.profile?.college && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                            <School fontSize="small" sx={{ verticalAlign: 'middle', mr: 0.5 }} />
+                            {job.postedBy.profile.college}
+                            {job.postedBy.profile.graduationYear && ` • ${job.postedBy.profile.graduationYear}`}
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
 
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="subtitle1" gutterBottom sx={{ 
@@ -383,26 +450,62 @@ function StudentOpportunities() {
 
               <CardActions sx={{ p: 2, pt: 0 }}>
                 <Box sx={{ width: '100%' }}>
-                  {getButtonProps(job._id).showStatus && (
-                    <Box sx={{ mb: 1, display: 'flex', justifyContent: 'center' }}>
-                      {getStatusChip(applicationStatuses[job._id])}
-                    </Box>
-                  )}
-                  <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={() => handleApply(job._id)}
-                    startIcon={<Star />}
-                    disabled={getButtonProps(job._id).disabled}
-                    sx={{
-                      bgcolor: `${getButtonProps(job._id).color}.main`,
-                      '&:hover': {
-                        bgcolor: `${getButtonProps(job._id).color}.dark`,
-                      }
-                    }}
-                  >
-                    {getButtonProps(job._id).text}
-                  </Button>
+                  {(() => {
+                    const status = applicationStatuses[job._id];
+                    let bgColor = '#1976d2'; // default primary blue
+                    let hoverColor = '#1565c0';
+                    let disabledColor = '#1976d2';
+                    
+                    if (status === 'pending') {
+                      bgColor = '#9e9e9e'; // grey
+                      hoverColor = '#757575';
+                      disabledColor = '#bdbdbd';
+                    } else if (status === 'accepted') {
+                      bgColor = '#4caf50'; // green
+                      hoverColor = '#388e3c';
+                      disabledColor = '#4caf50';
+                    } else if (status === 'rejected') {
+                      bgColor = '#f44336'; // red
+                      hoverColor = '#d32f2f';
+                      disabledColor = '#f44336';
+                    }
+                    
+                    return (
+                      <Button
+                        fullWidth
+                        onClick={() => handleApply(job._id)}
+                        startIcon={!status ? <Star /> : null}
+                        disabled={getButtonProps(job._id).disabled}
+                        style={{
+                          backgroundColor: bgColor,
+                          color: '#ffffff',
+                          textTransform: 'none',
+                          fontWeight: 500,
+                          boxShadow: '0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!getButtonProps(job._id).disabled) {
+                            e.currentTarget.style.backgroundColor = hoverColor;
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (!getButtonProps(job._id).disabled) {
+                            e.currentTarget.style.backgroundColor = bgColor;
+                          } else {
+                            e.currentTarget.style.backgroundColor = disabledColor;
+                          }
+                        }}
+                        sx={{
+                          '&.Mui-disabled': {
+                            backgroundColor: `${disabledColor} !important`,
+                            color: '#ffffff !important',
+                          }
+                        }}
+                      >
+                        {getButtonProps(job._id).text}
+                      </Button>
+                    );
+                  })()}
                 </Box>
               </CardActions>
             </Card>

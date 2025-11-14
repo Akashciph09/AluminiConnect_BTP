@@ -107,7 +107,7 @@ router.get('/', async (req, res) => {
 
         const opportunities = await FreelanceOpportunity.find()
             .sort({ createdAt: -1 })
-            .populate('postedBy', 'name email')
+            .populate('postedBy', 'name email profile')
             .populate('applicants', 'name email');
 
         console.log('Freelance opportunities found:', {

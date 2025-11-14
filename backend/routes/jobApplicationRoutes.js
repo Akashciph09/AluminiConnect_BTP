@@ -92,7 +92,19 @@ router.get('/:opportunityId/check-application', auth, async (req, res) => {
             studentId: req.user.userId
         });
 
-        res.json({ hasApplied: !!application, application });
+        if (application) {
+            res.json({ 
+                hasApplied: true, 
+                status: application.status,
+                application 
+            });
+        } else {
+            res.json({ 
+                hasApplied: false, 
+                status: null,
+                application: null 
+            });
+        }
     } catch (error) {
         console.error('Error checking application:', error);
         res.status(500).json({ message: 'Error checking application status' });

@@ -21,6 +21,24 @@ router.post('/register', async (req, res) => {
       });
     }
 
+    // Validate LNMIIT email format
+    // Format: YYBBDDNNN@lnmiit.ac.in
+    // YY = admission year (2 digits)
+    // B = one letter: 'u' (undergraduate) or 'd' (dual degree)
+    // BD = branch code: one of (cs, cc, ec, me)
+    // NNN = a 3-digit number between 000–999
+    const lnmiitRegex = /^[0-9]{2}[ud](cs|cc|ec|me)[0-9]{3}@lnmiit\.ac\.in$/i;
+    
+    if (!lnmiitRegex.test(email)) {
+      console.log('Invalid LNMIIT email format:', email);
+      return res.status(400).json({ 
+        message: 'Only valid LNMIIT institutional emails are allowed.',
+        details: {
+          email: 'Email must match the format: YYBBDDNNN@lnmiit.ac.in (e.g., 22ucs013@lnmiit.ac.in)'
+        }
+      });
+    }
+
     // Check if user already exists
     let user = await User.findOne({ email });
     if (user) {

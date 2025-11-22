@@ -41,10 +41,10 @@ router.post('/', auth, async (req, res) => {
       return res.status(401).json({ message: 'Authentication required' });
     }
 
-    const { title, description, date, mode, location, targetAudience } = req.body;
+    const { title, description, date, mode, location, targetAudience, duration } = req.body;
     
     // Validate required fields
-    if (!title || !description || !date || !mode || !targetAudience) {
+    if (!title || !description || !date || !mode || !targetAudience || !duration) {
       return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -60,6 +60,7 @@ router.post('/', auth, async (req, res) => {
       mode,
       location: mode === 'online' ? undefined : location,
       targetAudience,
+      duration,
       organizer: req.user._id
     });
 
@@ -103,7 +104,7 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Not authorized to update this workshop' });
     }
 
-    const { title, description, date, mode, location, targetAudience } = req.body;
+    const { title, description, date, mode, location, targetAudience, duration } = req.body;
     
     workshop.title = title || workshop.title;
     workshop.description = description || workshop.description;
@@ -111,6 +112,7 @@ router.put('/:id', auth, async (req, res) => {
     workshop.mode = mode || workshop.mode;
     workshop.location = mode === 'online' ? undefined : (location || workshop.location);
     workshop.targetAudience = targetAudience || workshop.targetAudience;
+    workshop.duration = duration || workshop.duration;
 
     await workshop.save();
     await workshop.populate('organizer', 'name email');

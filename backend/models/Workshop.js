@@ -29,6 +29,11 @@ const workshopSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  duration: {
+    type: String,
+    required: true,
+    enum: ['30 minutes', '1 hour', '1.5 hours', '2 hours', '3 hours', '4 hours', 'Half Day (4 hours)', 'Full Day (8 hours)', '2 Days', '3 Days', '1 Week']
+  },
   organizer: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',

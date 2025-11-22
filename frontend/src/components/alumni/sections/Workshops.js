@@ -65,7 +65,8 @@ const Workshops = () => {
     date: new Date().toISOString().split('T')[0],
     mode: 'online',
     location: '',
-    targetAudience: ''
+    targetAudience: '',
+    duration: '1 hour'
   });
 
   useEffect(() => {
@@ -101,7 +102,8 @@ const Workshops = () => {
         date: new Date(workshop.date).toISOString().split('T')[0],
         mode: workshop.mode,
         location: workshop.location || '',
-        targetAudience: workshop.targetAudience
+        targetAudience: workshop.targetAudience,
+        duration: workshop.duration || '1 hour'
       });
       setSelectedWorkshop(workshop);
     } else {
@@ -111,7 +113,8 @@ const Workshops = () => {
         date: new Date().toISOString().split('T')[0],
         mode: 'online',
         location: '',
-        targetAudience: ''
+        targetAudience: '',
+        duration: '1 hour'
       });
       setSelectedWorkshop(null);
     }
@@ -135,7 +138,8 @@ const Workshops = () => {
         date: formattedDate,
         mode: formData.mode,
         location: formData.mode === 'online' ? undefined : formData.location,
-        targetAudience: formData.targetAudience
+        targetAudience: formData.targetAudience,
+        duration: formData.duration
       };
 
       console.log('Submitting workshop data:', workshopData);
@@ -447,6 +451,27 @@ const Workshops = () => {
                   <MenuItem value="students">Students</MenuItem>
                   <MenuItem value="alumni">Alumni</MenuItem>
                   <MenuItem value="both">Both</MenuItem>
+                </Select>
+              </FormControl>
+
+              <FormControl fullWidth required>
+                <InputLabel>Duration</InputLabel>
+                <Select
+                  value={formData.duration}
+                  onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+                  label="Duration"
+                >
+                  <MenuItem value="30 minutes">30 minutes</MenuItem>
+                  <MenuItem value="1 hour">1 hour</MenuItem>
+                  <MenuItem value="1.5 hours">1.5 hours</MenuItem>
+                  <MenuItem value="2 hours">2 hours</MenuItem>
+                  <MenuItem value="3 hours">3 hours</MenuItem>
+                  <MenuItem value="4 hours">4 hours</MenuItem>
+                  <MenuItem value="Half Day (4 hours)">Half Day (4 hours)</MenuItem>
+                  <MenuItem value="Full Day (8 hours)">Full Day (8 hours)</MenuItem>
+                  <MenuItem value="2 Days">2 Days</MenuItem>
+                  <MenuItem value="3 Days">3 Days</MenuItem>
+                  <MenuItem value="1 Week">1 Week</MenuItem>
                 </Select>
               </FormControl>
             </Box>

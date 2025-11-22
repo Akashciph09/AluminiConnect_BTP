@@ -25,6 +25,7 @@ import {
   Settings as SettingsIcon,
   Menu as MenuIcon,
   Logout as LogoutIcon,
+  Code as CodeIcon,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -36,6 +37,7 @@ const menuItems = [
   { text: 'Opportunities', icon: <WorkIcon />, path: '/student/opportunities' },
   { text: 'Mentorship', icon: <SchoolIcon />, path: '/student/mentorship' },
   { text: 'Workshops', icon: <EventIcon />, path: '/student/workshops' },
+  { text: 'Experiences', icon: <CodeIcon />, path: '/student/show-tell' },
 ];
 
 function StudentSidebar() {

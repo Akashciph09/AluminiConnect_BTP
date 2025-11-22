@@ -7,6 +7,7 @@ import StudentOpportunities from '../components/student/sections/StudentOpportun
 import StudentMentorship from '../components/student/sections/Mentorship';
 import StudentWorkshops from '../components/student/sections/StudentWorkshops';
 import StudentMessages from '../components/student/sections/StudentMessages';
+import FreelanceShowTell from '../components/student/sections/FreelanceShowTell';
 
 const StudentRoute = () => {
   const { user } = useAuth();
@@ -24,6 +25,7 @@ const StudentRoute = () => {
         <Route path="mentorship" element={<StudentMentorship />} />
         <Route path="workshops" element={<StudentWorkshops />} />
         <Route path="messages" element={<StudentMessages />} />
+        <Route path="show-tell" element={<FreelanceShowTell />} />
       </Route>
     </Routes>
   );

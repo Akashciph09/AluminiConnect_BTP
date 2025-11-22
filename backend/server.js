@@ -15,6 +15,7 @@ const jobApplicationRoutes = require('./routes/jobApplicationRoutes');
 const mentorshipRoutes = require('./routes/mentorshipRoutes');
 const workshopRoutes = require('./routes/workshopRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const freelanceEntriesRoutes = require('./routes/freelanceEntriesRoutes');
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use('/api/job-applications', jobApplicationRoutes);
 app.use('/api/mentorship', mentorshipRoutes);
 app.use('/api/workshops', workshopRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/student-entries', freelanceEntriesRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

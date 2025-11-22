@@ -199,54 +199,119 @@ router.get('/mentor-requests', auth, async (req, res) => {
         const requests = await MentorshipRequest.find({ mentorId: req.user.id })
             .populate({
                 path: 'studentId',
-                select: 'name email profilePicture'
+                select: 'name email profile',
+                model: 'User'
             })
             .populate({
                 path: 'mentorId',
-                select: 'name email profilePicture'
+                select: 'name email profile',
+                model: 'User'
             });
 
         console.log('Found requests:', requests.length);
-        console.log('Requests details:', requests.map(req => ({
-            _id: req._id,
-            student: req.studentId ? {
-                id: req.studentId._id,
-                name: req.studentId.name,
-                email: req.studentId.email
-            } : null,
-            mentor: req.mentorId ? {
-                id: req.mentorId._id,
-                name: req.mentorId.name,
-                email: req.mentorId.email
-            } : null,
-            status: req.status
-        })));
+        
+        // Log raw data for debugging
+        requests.forEach((req, index) => {
+            console.log(`Request ${index + 1} raw data:`, {
+                _id: req._id,
+                studentId_type: typeof req.studentId,
+                studentId_value: req.studentId,
+                studentId_name: req.studentId?.name,
+                studentId_email: req.studentId?.email,
+                studentId_profile: req.studentId?.profile
+            });
+        });
         
         // Transform the data to match frontend expectations
-        const transformedRequests = requests.map(request => ({
-            _id: request._id,
-            student: request.studentId ? {
-                _id: request.studentId._id,
-                name: request.studentId.name || 'Unknown Student',
-                email: request.studentId.email || 'No email provided',
-                profilePicture: request.studentId.profilePicture
-            } : null,
-            mentor: request.mentorId ? {
-                _id: request.mentorId._id,
-                name: request.mentorId.name || 'Unknown Mentor',
-                email: request.mentorId.email || 'No email provided',
-                profilePicture: request.mentorId.profilePicture
-            } : null,
-            status: request.status,
-            message: request.message,
-            requestedAt: request.requestedAt
+        const transformedRequests = await Promise.all(requests.map(async (request) => {
+            // Handle student data
+            let studentData = null;
+            if (request.studentId) {
+                // Check if it's a populated object (Mongoose document or plain object with name)
+                const student = request.studentId;
+                const studentId = student._id || student;
+                
+                // Check if student is populated (has name property)
+                if (student && student.name !== undefined && student.name !== null) {
+                    // Student is populated
+                    studentData = {
+                        _id: studentId.toString(),
+                        name: student.name || 'Unknown Student',
+                        email: student.email || 'No email provided',
+                        profilePicture: (student.profile && student.profile.profileImage) ? student.profile.profileImage : null
+                    };
+                } else {
+                    // If studentId is just an ObjectId, manually fetch the student
+                    console.warn('StudentId not populated properly for request:', request._id, 'StudentId:', studentId, 'Fetching manually...');
+                    try {
+                        const fetchedStudent = await User.findById(studentId).select('name email profile');
+                        if (fetchedStudent) {
+                            studentData = {
+                                _id: fetchedStudent._id.toString(),
+                                name: fetchedStudent.name || 'Unknown Student',
+                                email: fetchedStudent.email || 'No email provided',
+                                profilePicture: (fetchedStudent.profile && fetchedStudent.profile.profileImage) ? fetchedStudent.profile.profileImage : null
+                            };
+                            console.log('Successfully fetched student manually:', studentData.name);
+                        } else {
+                            console.error('Student not found with ID:', studentId);
+                        }
+                    } catch (err) {
+                        console.error('Error fetching student manually:', err);
+                    }
+                }
+            }
+            
+            // Handle mentor data
+            let mentorData = null;
+            if (request.mentorId) {
+                const mentor = request.mentorId;
+                // Check if mentor is populated (has name property)
+                if (mentor && mentor.name !== undefined && mentor.name !== null) {
+                    mentorData = {
+                        _id: mentor._id.toString(),
+                        name: mentor.name || 'Unknown Mentor',
+                        email: mentor.email || 'No email provided',
+                        profilePicture: (mentor.profile && mentor.profile.profileImage) ? mentor.profile.profileImage : null
+                    };
+                }
+            }
+            
+            const transformed = {
+                _id: request._id.toString(),
+                student: studentData,
+                mentor: mentorData,
+                status: request.status,
+                message: request.message || '',
+                requestedAt: request.requestedAt || request.createdAt
+            };
+            
+            console.log('Transformed request:', {
+                _id: transformed._id,
+                hasStudent: !!transformed.student,
+                studentName: transformed.student?.name,
+                status: transformed.status
+            });
+            
+            return transformed;
         }));
+        
+        // Filter out requests where student couldn't be populated
+        const validRequests = transformedRequests.filter(req => req.student !== null);
 
-        console.log('Transformed requests:', transformedRequests);
-        res.json(transformedRequests);
+        console.log('Final transformed requests count:', validRequests.length);
+        if (validRequests.length > 0) {
+            console.log('Sample transformed request:', JSON.stringify(validRequests[0], null, 2));
+        }
+        
+        res.json(validRequests);
     } catch (error) {
         console.error('Error fetching mentorship requests:', error);
-        res.status(500).json({ message: 'Error fetching mentorship requests' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ 
+            message: 'Error fetching mentorship requests',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 });
 

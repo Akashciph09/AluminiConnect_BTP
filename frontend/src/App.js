@@ -12,6 +12,7 @@ import StudentWorkshops from './components/student/sections/StudentWorkshops';
 import StudentOpportunities from './components/student/sections/StudentOpportunities';
 import StudentMentorship from './components/student/sections/StudentMentorship';
 import StudentSettings from './components/student/sections/StudentSettings';
+import FreelanceShowTell from './components/student/sections/FreelanceShowTell';
 import ProfileOverview from './components/alumni/sections/ProfileOverview';
 import Network from './components/alumni/sections/Network';
 import Opportunities from './components/alumni/sections/Opportunities';
@@ -46,6 +47,7 @@ function App() {
               <Route path="opportunities" element={<StudentOpportunities />} />
               <Route path="mentorship" element={<StudentMentorship />} />
               <Route path="settings" element={<StudentSettings />} />
+              <Route path="show-tell" element={<FreelanceShowTell />} />
             </Route>
 
             {/* Alumni Routes */}

@@ -62,6 +62,12 @@ function StudentSidebar() {
     if (!string) return 'S';
     return string.charAt(0).toUpperCase() + string.slice(1);
   };
+  // Compute avatar source or fallback initial
+  const avatarSrc =
+    user?.profile?.profileImage || user?.profilePicture || user?.profile?.profilePicture || '';
+  const avatarInitial = (user && user.name && user.name.trim().length > 0)
+    ? user.name.trim().charAt(0).toUpperCase()
+    : 'S';
 
   const drawer = (
     <div className="flex flex-col justify-between h-screen bg-[#0f172a] text-white">
@@ -104,15 +110,18 @@ function StudentSidebar() {
         >
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <Avatar
+              src={avatarSrc || undefined}
+              alt={user?.name || 'Student'}
               sx={{
-                bgcolor: 'primary.main',
-                width: 40,
-                height: 40,
+                bgcolor: avatarSrc ? 'transparent' : 'primary.main',
+                width: 44,
+                height: 44,
                 fontSize: '1.2rem',
                 fontWeight: 'bold',
+                objectFit: 'cover',
               }}
             >
-              {capitalizeFirstLetter(user?.name?.[0])}
+              {!avatarSrc && avatarInitial}
             </Avatar>
             <Typography
               variant="h6"
@@ -121,7 +130,10 @@ function StudentSidebar() {
                 color: '#FFFFFF',
                 textShadow: '0 1px 2px rgba(0,0,0,0.2)',
                 flex: 1,
-                textAlign: 'center',
+                textAlign: 'left',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}
             >
               {capitalizeFirstLetter(user?.name) || 'Student User'}

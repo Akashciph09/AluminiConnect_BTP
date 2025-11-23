@@ -17,8 +17,27 @@ export const AuthProvider = ({ children }) => {
         
         if (token && userData) {
           const parsedUserData = JSON.parse(userData);
-          setUser(parsedUserData);
-          setIsAuthenticated(true);
+          // Attempt to fetch fresh profile from backend to include profileImage/profilePicture
+          try {
+            const resp = await axios.get('http://localhost:3002/api/users/profile', {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            const fullUser = {
+              ...parsedUserData,
+              profile: resp.data.profile || {},
+              name: resp.data.name || parsedUserData.name,
+              email: resp.data.email || parsedUserData.email,
+              role: resp.data.role || parsedUserData.role,
+            };
+            setUser(fullUser);
+            localStorage.setItem('userData', JSON.stringify(fullUser));
+            setIsAuthenticated(true);
+          } catch (err) {
+            // If profile fetch fails, fall back to stored data
+            console.warn('Could not fetch full profile during auth check, using stored userData', err.message);
+            setUser(parsedUserData);
+            setIsAuthenticated(true);
+          }
         }
       } catch (error) {
         console.error('Auth check failed:', error);
@@ -49,10 +68,22 @@ export const AuthProvider = ({ children }) => {
       if (response.data.token && response.data.user) {
         const { token, user: newUser } = response.data;
         localStorage.setItem('token', token);
-        localStorage.setItem('userData', JSON.stringify(newUser));
-        setUser(newUser);
-        setIsAuthenticated(true);
-        return { success: true, user: newUser };
+        // Try to fetch full profile
+        try {
+          const resp = await axios.get('http://localhost:3002/api/users/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const fullUser = { ...newUser, profile: resp.data.profile || {} };
+          localStorage.setItem('userData', JSON.stringify(fullUser));
+          setUser(fullUser);
+          setIsAuthenticated(true);
+          return { success: true, user: fullUser };
+        } catch (err) {
+          localStorage.setItem('userData', JSON.stringify(newUser));
+          setUser(newUser);
+          setIsAuthenticated(true);
+          return { success: true, user: newUser };
+        }
       } else {
         throw new Error('Registration failed');
       }
@@ -85,10 +116,21 @@ export const AuthProvider = ({ children }) => {
       if (response.data.token && response.data.user) {
         const { token, user } = response.data;
         localStorage.setItem('token', token);
-        localStorage.setItem('userData', JSON.stringify(user));
-        setUser(user);
-        setIsAuthenticated(true);
-        return { success: true, user };
+        try {
+          const resp = await axios.get('http://localhost:3002/api/users/profile', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const fullUser = { ...user, profile: resp.data.profile || {} };
+          localStorage.setItem('userData', JSON.stringify(fullUser));
+          setUser(fullUser);
+          setIsAuthenticated(true);
+          return { success: true, user: fullUser };
+        } catch (err) {
+          localStorage.setItem('userData', JSON.stringify(user));
+          setUser(user);
+          setIsAuthenticated(true);
+          return { success: true, user };
+        }
       } else {
         throw new Error('Login failed');
       }

@@ -80,21 +80,33 @@ router.post('/profile/picture', auth, upload.single('profilePicture'), async (re
             return res.status(404).json({ message: 'User not found' });
         }
 
-        // Delete old profile picture if exists
-        if (user.profile.profileImage) {
-            const oldImagePath = path.join(__dirname, '..', user.profile.profileImage);
-            if (fs.existsSync(oldImagePath)) {
-                fs.unlinkSync(oldImagePath);
+        // Delete old profile picture if exists (check common fields for backward compatibility)
+        const oldPaths = [user.profile?.profileImage, user.profile?.profilePicture, user.profilePicture];
+        for (const p of oldPaths) {
+            if (p) {
+                const oldImagePath = path.join(__dirname, '..', p);
+                if (fs.existsSync(oldImagePath)) {
+                    try { fs.unlinkSync(oldImagePath); } catch (err) { console.error('Failed to delete old image', err); }
+                }
             }
         }
 
-        // Update profile with new image path
-        user.profile.profileImage = req.file.path;
+        // Build a full URL to the uploaded image so frontends can load it directly
+        const backendBase = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 3002}`;
+        const normalizedPath = req.file.path.replace(/\\/g, '/');
+        const fullUrl = `${backendBase}/${normalizedPath}`;
+
+        // Update profile with new image path and keep backward-compatible fields
+        user.profile = user.profile || {};
+        user.profile.profileImage = fullUrl;
+        user.profile.profilePicture = fullUrl; // legacy field
+        user.profilePicture = fullUrl; // legacy top-level field used in some frontend components
         await user.save();
 
         res.json({
             message: 'Profile picture uploaded successfully',
-            profileImage: req.file.path
+            profileImage: fullUrl,
+            profilePicture: fullUrl
         });
     } catch (error) {
         console.error('Error uploading profile picture:', error);

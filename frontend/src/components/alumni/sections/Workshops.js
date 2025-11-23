@@ -30,6 +30,11 @@ import {
   ListItemAvatar,
   Avatar,
   Badge,
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormLabel,
+  FormHelperText,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -65,9 +70,12 @@ const Workshops = () => {
     date: new Date().toISOString().split('T')[0],
     mode: 'online',
     location: '',
+    meetingLink: '',
     targetAudience: '',
-    duration: '1 hour'
+    duration: '1 hour',
+    registrationMode: 'email-only'
   });
+  const [formErrors, setFormErrors] = useState({});
 
   useEffect(() => {
     if (authLoading) return;
@@ -102,8 +110,10 @@ const Workshops = () => {
         date: new Date(workshop.date).toISOString().split('T')[0],
         mode: workshop.mode,
         location: workshop.location || '',
+        meetingLink: workshop.meetingLink || '',
         targetAudience: workshop.targetAudience,
-        duration: workshop.duration || '1 hour'
+        duration: workshop.duration || '1 hour',
+        registrationMode: workshop.registrationMode || 'email-only'
       });
       setSelectedWorkshop(workshop);
     } else {
@@ -113,11 +123,14 @@ const Workshops = () => {
         date: new Date().toISOString().split('T')[0],
         mode: 'online',
         location: '',
+        meetingLink: '',
         targetAudience: '',
-        duration: '1 hour'
+        duration: '1 hour',
+        registrationMode: 'email-only'
       });
       setSelectedWorkshop(null);
     }
+    setFormErrors({});
     setOpenDialog(true);
   };
 
@@ -126,8 +139,35 @@ const Workshops = () => {
     setSelectedWorkshop(null);
   };
 
+  const validateForm = () => {
+    const errors = {};
+    
+    // Validate meetingLink for online workshops
+    if (formData.mode === 'online') {
+      if (!formData.meetingLink || formData.meetingLink.trim() === '') {
+        errors.meetingLink = 'Meeting link is required for online workshops.';
+      } else {
+        // Validate URL format
+        try {
+          new URL(formData.meetingLink);
+        } catch (e) {
+          errors.meetingLink = 'Please enter a valid URL (e.g., https://meet.google.com/xxx-xxxx-xxx)';
+        }
+      }
+    }
+    
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate form
+    if (!validateForm()) {
+      return;
+    }
+    
     try {
       // Format the date properly
       const formattedDate = new Date(formData.date).toISOString();
@@ -137,9 +177,11 @@ const Workshops = () => {
         description: formData.description,
         date: formattedDate,
         mode: formData.mode,
-        location: formData.mode === 'online' ? undefined : formData.location,
+        location: formData.mode === 'offline' ? formData.location : undefined,
+        meetingLink: formData.mode === 'online' ? formData.meetingLink : undefined,
         targetAudience: formData.targetAudience,
-        duration: formData.duration
+        duration: formData.duration,
+        registrationMode: formData.registrationMode
       };
 
       console.log('Submitting workshop data:', workshopData);
@@ -312,7 +354,13 @@ const Workshops = () => {
                         <LocationIcon sx={{ mr: 1, color: 'text.secondary' }} />
                       )}
                       <Typography variant="body2">
-                        {workshop.mode === 'online' ? 'Online' : workshop.location}
+                        {workshop.mode === 'online' 
+                          ? (workshop.meetingLink ? (
+                              <a href={workshop.meetingLink} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>
+                                Join Meeting
+                              </a>
+                            ) : 'Online')
+                          : workshop.location}
                       </Typography>
                     </Box>
 
@@ -326,7 +374,7 @@ const Workshops = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center' }}>
                       <PeopleIcon sx={{ mr: 1, color: 'text.secondary' }} />
                       <Typography variant="body2">
-                        {workshop.registrations?.length || 0} registered
+                        {workshop.registrationCount || workshop.registrations?.length || 0} registered
                       </Typography>
                     </Box>
                   </Stack>
@@ -418,26 +466,48 @@ const Workshops = () => {
                 InputLabelProps={{ shrink: true }}
               />
 
-              <FormControl fullWidth required>
-                <InputLabel>Mode</InputLabel>
-                <Select
+              <FormControl component="fieldset" required>
+                <FormLabel component="legend">Mode</FormLabel>
+                <RadioGroup
+                  row
                   value={formData.mode}
-                  onChange={(e) => setFormData({ ...formData, mode: e.target.value })}
-                  label="Mode"
+                  onChange={(e) => {
+                    setFormData({ ...formData, mode: e.target.value, meetingLink: '', location: '' });
+                    setFormErrors({ ...formErrors, meetingLink: '' });
+                  }}
                 >
-                  <MenuItem value="online">Online</MenuItem>
-                  <MenuItem value="offline">Offline</MenuItem>
-                  <MenuItem value="hybrid">Hybrid</MenuItem>
-                </Select>
+                  <FormControlLabel value="online" control={<Radio />} label="Online" />
+                  <FormControlLabel value="offline" control={<Radio />} label="Offline" />
+                </RadioGroup>
               </FormControl>
 
-              {formData.mode !== 'online' && (
+              {formData.mode === 'online' && (
+                <TextField
+                  label="Meeting Link"
+                  type="url"
+                  value={formData.meetingLink}
+                  onChange={(e) => {
+                    setFormData({ ...formData, meetingLink: e.target.value });
+                    if (formErrors.meetingLink) {
+                      setFormErrors({ ...formErrors, meetingLink: '' });
+                    }
+                  }}
+                  fullWidth
+                  required
+                  error={!!formErrors.meetingLink}
+                  helperText={formErrors.meetingLink || 'Enter the meeting URL (e.g., https://meet.google.com/xxx-xxxx-xxx)'}
+                  placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                />
+              )}
+
+              {formData.mode === 'offline' && (
                 <TextField
                   label="Location"
                   value={formData.location}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value })}
                   fullWidth
                   required
+                  placeholder="Enter the physical location"
                 />
               )}
 
@@ -473,6 +543,20 @@ const Workshops = () => {
                   <MenuItem value="3 Days">3 Days</MenuItem>
                   <MenuItem value="1 Week">1 Week</MenuItem>
                 </Select>
+              </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel>Registration Mode</InputLabel>
+                <Select
+                  value={formData.registrationMode}
+                  onChange={(e) => setFormData({ ...formData, registrationMode: e.target.value })}
+                  label="Registration Mode"
+                >
+                  <MenuItem value="email-only">Email Only</MenuItem>
+                  <MenuItem value="public-link">Public Link</MenuItem>
+                  <MenuItem value="external-form">External Form</MenuItem>
+                </Select>
+                <FormHelperText>How participants will register for this workshop</FormHelperText>
               </FormControl>
             </Box>
           </DialogContent>

@@ -9,6 +9,7 @@ The Freelance Experiences feature allows authenticated students to share their f
 **File:** `backend/models/FreelanceEntry.js`
 
 The Mongoose schema includes:
+
 - **Required fields:** title, shortSummary (max 200 chars), role, technologies, problemSolved, implementationDetails
 - **Optional fields:** githubLink, demoLink, figmaLink, attachments, isAnonymous
 - **Relationships:** References User model via studentId

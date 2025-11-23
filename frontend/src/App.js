@@ -25,6 +25,7 @@ import JobList from './components/JobList';
 import PrivateRoute from './components/auth/PrivateRoute';
 import StudentRoute from './components/auth/StudentRoute';
 import AlumniRoute from './components/auth/AlumniRoute';
+import WorkshopJoin from './components/workshop/WorkshopJoin';
 import './components/JobStyles.css';
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
             {/* Public Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/workshops/join/:token" element={<WorkshopJoin />} />
             <Route path="/" element={<Navigate to="/login" replace />} />
 
             {/* Student Routes */}

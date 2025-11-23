@@ -17,13 +17,25 @@ const workshopSchema = new mongoose.Schema({
   mode: {
     type: String,
     required: true,
-    enum: ['online', 'offline', 'hybrid']
+    enum: ['online', 'offline']
+  },
+  meetingLink: {
+    type: String,
+    trim: true,
+    required: function() {
+      return this.mode === 'online';
+    }
   },
   location: {
     type: String,
     required: function() {
-      return this.mode !== 'online';
+      return this.mode === 'offline';
     }
+  },
+  registrationMode: {
+    type: String,
+    enum: ['email-only', 'public-link', 'external-form'],
+    default: 'email-only'
   },
   targetAudience: {
     type: String,

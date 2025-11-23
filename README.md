@@ -1,4 +1,4 @@
-# AlumniConnect (project12)
+# AlumniConnect 
 
 A campus alumni-student networking platform built with Node.js/Express (backend) and React (frontend). This repository contains both backend and frontend apps for managing users, workshops, mentorships, jobs, and events. It includes features like authentication (JWT), profile pictures (uploads), workshop RSVPs, and a secure OTP password-reset flow.
 

@@ -162,9 +162,4 @@ npm test
 
 ---
 
-If you'd like, I can also:
-- Add a short contribution guide (PR checklist).
-- Add a small script to backfill image URLs in the DB.
-- Return `profile` in the login response to make frontend startup faster.
 
-Tell me which of those you'd like next and I'll implement it.

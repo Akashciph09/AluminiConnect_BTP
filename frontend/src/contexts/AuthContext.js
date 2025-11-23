@@ -155,6 +155,18 @@ export const AuthProvider = ({ children }) => {
     setError(null);
   };
 
+  // Update user in context and localStorage (used after profile updates)
+  const updateUser = (updatedUser) => {
+    try {
+      if (!updatedUser) return;
+      const merged = { ...(user || {}), ...updatedUser };
+      setUser(merged);
+      localStorage.setItem('userData', JSON.stringify(merged));
+    } catch (err) {
+      console.warn('Failed to update user in context', err.message);
+    }
+  };
+
   const value = {
     user,
     isAuthenticated,
@@ -162,6 +174,7 @@ export const AuthProvider = ({ children }) => {
     error,
     register,
     login,
+    updateUser,
     logout,
     isStudent: user?.role === 'student',
     isAlumni: user?.role === 'alumni'

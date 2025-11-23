@@ -49,6 +49,8 @@ import axios from 'axios';
 
 const AlumniProfile = () => {
   const { user, updateUser } = useAuth();
+  const fileInputRef = React.useRef(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -119,7 +121,11 @@ const AlumniProfile = () => {
       );
 
       if (response.data) {
-        updateUser(response.data);
+        // Persist updates to AuthContext/localStorage if available
+        if (typeof updateUser === 'function') {
+          const updatedUser = { ...user, ...response.data };
+          updateUser(updatedUser);
+        }
         setSuccess(true);
         setIsEditing(false);
       }
@@ -128,6 +134,53 @@ const AlumniProfile = () => {
       setError(error.response?.data?.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setError('Please upload an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size should be less than 5MB');
+      return;
+    }
+
+    const form = new FormData();
+    form.append('profilePicture', file);
+
+    try {
+      setUploadingImage(true);
+      setError(null);
+      const token = localStorage.getItem('token');
+      const resp = await axios.post('http://localhost:3002/api/users/profile/picture', form, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (resp.data?.profileImage) {
+        setFormData(prev => ({ ...prev, profilePicture: resp.data.profileImage }));
+
+        // Update global user
+        if (typeof updateUser === 'function') {
+          const updatedUser = { ...user, profile: { ...(user?.profile || {}), profileImage: resp.data.profileImage, profilePicture: resp.data.profileImage } };
+          updateUser(updatedUser);
+        }
+
+        setSuccess(true);
+      }
+    } catch (err) {
+      console.error('Error uploading alumni image:', err);
+      setError(err.response?.data?.message || 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
     }
   };
 
@@ -156,17 +209,41 @@ const AlumniProfile = () => {
           gap: 3,
           mb: 3
         }}>
-          <Avatar
-            src={formData.profilePicture}
-            sx={{ 
-              width: 120, 
-              height: 120,
-              border: '4px solid white',
-              boxShadow: '0 0 10px rgba(0,0,0,0.2)'
-            }}
-          >
-            {formData.name?.[0]}
-          </Avatar>
+          <Box sx={{ position: 'relative' }}>
+            <Avatar
+              src={formData.profilePicture}
+              sx={{ 
+                width: 120, 
+                height: 120,
+                border: '4px solid white',
+                boxShadow: '0 0 10px rgba(0,0,0,0.2)'
+              }}
+            >
+              {formData.name?.[0]}
+            </Avatar>
+            <input
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+            />
+            <IconButton
+              color="primary"
+              sx={{
+                position: 'absolute',
+                bottom: 6,
+                right: 6,
+                bgcolor: 'background.paper',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                '&:hover': { bgcolor: 'background.paper' }
+              }}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingImage}
+            >
+              {uploadingImage ? <CircularProgress size={24} /> : <PhotoCameraIcon sx={{ color: 'primary.main' }} />}
+            </IconButton>
+          </Box>
           <Box>
             <Typography variant="h4" sx={{ color: 'white', fontWeight: 'bold' }}>
               {formData.name}

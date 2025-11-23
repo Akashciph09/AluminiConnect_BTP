@@ -71,7 +71,7 @@ Open two terminals (one for backend, one for frontend).
 Backend:
 
 ```powershell
-cd 'c:\Users\akash\Downloads\AluminiConnect_btp\project12\backend'
+
 npm install
 # create a .env file with variables described above
 npm run dev
@@ -80,7 +80,7 @@ npm run dev
 Frontend:
 
 ```powershell
-cd 'c:\Users\akash\Downloads\AluminiConnect_btp\project12\frontend'
+
 npm install
 npm start
 ```

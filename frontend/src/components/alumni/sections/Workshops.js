@@ -88,7 +88,14 @@ const Workshops = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/workshops');
+      // If the logged-in user is an alumni, fetch only workshops they organized
+      // Use both possible id fields to be robust: `user._id` (common) or `user.id`.
+      let endpoint = '/workshops';
+      if (user && isAlumni) {
+        const userId = user._id || user.id || user.userId;
+        if (userId) endpoint = `/workshops/alumni/${userId}`;
+      }
+      const response = await axios.get(endpoint);
       console.log('Fetched workshops:', response.data);
       setWorkshops(response.data);
     } catch (error) {
@@ -239,9 +246,19 @@ const Workshops = () => {
     }
   };
 
-  const handleViewRegistrations = (workshop) => {
-    setSelectedWorkshop(workshop);
-    setOpenRegistrations(true);
+  const handleViewRegistrations = async (workshop) => {
+    try {
+      // Fetch registrations from the API so we get the latest RSVP data with user info
+      const response = await axios.get(`/workshops/${workshop._id}/registrations`);
+      const registrations = response.data || [];
+
+      // Attach the fetched registrations to the workshop object and open the dialog
+      setSelectedWorkshop({ ...workshop, registrations });
+      setOpenRegistrations(true);
+    } catch (err) {
+      console.error('Error fetching registrations for workshop:', err);
+      setSnackbar({ open: true, message: err.response?.data?.message || 'Failed to load registrations', severity: 'error' });
+    }
   };
 
   const getStatusColor = (status) => {

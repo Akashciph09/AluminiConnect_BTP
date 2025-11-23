@@ -41,9 +41,23 @@ router.get('/', auth, async (req, res) => {
 router.get('/alumni/:alumniId', async (req, res) => {
   try {
     const workshops = await Workshop.find({ organizer: req.params.alumniId })
-      .populate('registrations.user', 'name email profilePicture')
+      .populate('registrations.user', 'name email profile profileImage')
       .sort({ date: -1 });
-    res.json(workshops);
+
+    // Compute registration counts from WorkshopRSVP for each workshop (authoritative source)
+    const workshopsWithCounts = await Promise.all(
+      workshops.map(async (workshop) => {
+        const registrationCount = await WorkshopRSVP.countDocuments({
+          workshopId: workshop._id,
+          status: { $ne: 'cancelled' }
+        });
+        const workshopObj = workshop.toObject();
+        workshopObj.registrationCount = registrationCount;
+        return workshopObj;
+      })
+    );
+
+    res.json(workshopsWithCounts);
   } catch (error) {
     console.error('Error fetching alumni workshops:', error);
     res.status(500).json({ message: 'Error fetching alumni workshops' });
@@ -127,6 +141,41 @@ router.get('/:id', auth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching workshop:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get registrations for a workshop (RSVPs) - only organizer can view
+router.get('/:id/registrations', auth, async (req, res) => {
+  try {
+    const workshop = await Workshop.findById(req.params.id);
+    if (!workshop) {
+      return res.status(404).json({ message: 'Workshop not found' });
+    }
+
+    // Only the organizer can view registrations
+    if (workshop.organizer.toString() !== (req.user._id || req.user.userId).toString()) {
+      return res.status(403).json({ message: 'Not authorized to view registrations for this workshop' });
+    }
+
+    // Fetch RSVPs and populate the user info
+    const registrations = await WorkshopRSVP.find({
+      workshopId: workshop._id,
+      status: { $ne: 'cancelled' }
+    })
+      .populate('userId', 'name email profile')
+      .sort({ createdAt: -1 });
+
+    // Map to a consistent shape expected by frontend
+    const mapped = registrations.map(r => ({
+      _id: r._id,
+      user: r.userId || null,
+      registeredAt: r.registrationDate || r.createdAt
+    }));
+
+    res.json(mapped);
+  } catch (error) {
+    console.error('Error fetching workshop registrations:', error);
+    res.status(500).json({ message: 'Error fetching registrations' });
   }
 });
 
@@ -300,6 +349,20 @@ router.post('/:id/register', auth, async (req, res) => {
         await rsvp.save();
       }
 
+      // Ensure the workshop document records this registration so the organizer
+      // can see the student's name when fetching workshops.
+      try {
+        const alreadyRegistered = workshop.registrations.some(
+          (reg) => reg.user && reg.user.toString() === (userId.toString ? userId.toString() : userId)
+        );
+        if (!alreadyRegistered) {
+          workshop.registrations.push({ user: userId, registeredAt: new Date() });
+          await workshop.save();
+        }
+      } catch (err) {
+        console.error('Failed to update workshop registrations for public-link:', err);
+      }
+
       // Get user name for email
       const user = await User.findById(userId);
       const studentName = user?.name || 'Student';
@@ -386,6 +449,20 @@ router.post('/:id/register', auth, async (req, res) => {
       registrationMode: registrationMode,
       emailSent: emailResult.success
     });
+
+    // Also ensure the workshop document records this registration so organizers
+    // can view the registered student's name via the workshop endpoints.
+    try {
+      const alreadyRegistered = workshop.registrations.some(
+        (reg) => reg.user && reg.user.toString() === (userId.toString ? userId.toString() : userId)
+      );
+      if (!alreadyRegistered) {
+        workshop.registrations.push({ user: userId, registeredAt: new Date() });
+        await workshop.save();
+      }
+    } catch (err) {
+      console.error('Failed to update workshop registrations for email-only mode:', err);
+    }
 
     return res.json({ 
       status: 'ok',

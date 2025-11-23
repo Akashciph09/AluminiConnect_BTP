@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 function Login() {
   const theme = useTheme();
@@ -34,6 +35,7 @@ function Login() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -264,6 +266,12 @@ function Login() {
               }}
             />
 
+            <Box sx={{ mt: 1, textAlign: 'right' }}>
+              <Link component="button" variant="body2" onClick={() => setForgotOpen(true)} sx={{ color: '#FFFFFF' }}>
+                Forgot password?
+              </Link>
+            </Box>
+
             <Button
               type="submit"
               fullWidth
@@ -309,6 +317,7 @@ function Login() {
           </Box>
         </Paper>
       </Container>
+      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} />
     </Box>
   );
 }

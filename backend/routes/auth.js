@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const authReset = require('../controllers/authResetController');
 
 // Register
 router.post('/register', async (req, res) => {
@@ -208,5 +209,10 @@ router.get('/verify-token', async (req, res) => {
     res.status(401).json({ message: 'Invalid token' });
   }
 });
+
+// Password reset / OTP endpoints
+router.post('/forgot-password', authReset.forgotPassword);
+router.post('/resend-otp', authReset.resendOtp);
+router.post('/verify-otp', authReset.verifyOtp);
 
 module.exports = router; 

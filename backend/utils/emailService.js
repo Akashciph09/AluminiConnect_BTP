@@ -95,6 +95,21 @@ const generateHTMLEmail = (studentName, workshopTitle, dateTime, joinUrl, platfo
 </div>`;
 };
 
+// Generate HTML for password reset OTP email matching workshop style
+const generateResetHTMLEmail = (userName, otp, ttlMinutes, platformName = 'AlumniConnect') => {
+  return `
+<div style="font-family: Arial, Helvetica, sans-serif; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px; text-align: center;">
+  <img src="${process.env.PLATFORM_LOGO_URL || ''}" alt="${platformName}" style="max-width:120px; margin-bottom:12px;" />
+  <h2 style="color: #1976d2; margin-bottom:8px;">${platformName} — Password Reset</h2>
+  <p>Hi ${userName || 'User'},</p>
+  <p>Use the following one-time code to reset your password. This code expires in ${ttlMinutes} minutes.</p>
+  <div style="font-size:32px; font-weight:700; letter-spacing:6px; margin: 18px 0;">${otp}</div>
+  <p style="color:#666; font-size:13px;">If you didn't request this, you can safely ignore this email or contact support immediately.</p>
+  <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
+  <p style="font-size:12px; color:#777;">This email was sent by ${platformName}. If you need help, reply to this email.</p>
+</div>`;
+};
+
 // Send workshop registration email
 const sendWorkshopEmail = async (email, studentName, workshopTitle, workshopDate, joinUrl, registrationMode = 'email-only') => {
   try {
@@ -181,5 +196,38 @@ module.exports = {
   sendWorkshopEmail,
   generatePlainTextEmail,
   generateHTMLEmail
+};
+
+// Generic email sender for other flows (password reset, confirmations)
+module.exports.sendEmail = async (to, subject, text, html) => {
+  try {
+    if (!to || !to.trim()) return { success: false, error: 'Missing recipient' };
+    const transporter = createTransporter();
+    if (!transporter) return { success: false, error: 'Email transporter not configured' };
+
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER || 'noreply@alumniconnect.com',
+      to,
+      subject,
+      text,
+      html
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Generic email sent:', info.messageId);
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error('Error sending generic email:', err);
+    return { success: false, error: err.message };
+  }
+};
+
+// Convenience helper for password reset emails that matches the workshop/email branding
+module.exports.sendPasswordResetEmail = async (to, userName, otp, ttlMinutes) => {
+  const platformName = process.env.PLATFORM_NAME || 'AlumniConnect';
+  const subject = `Your password reset code for ${platformName}`;
+  const text = `Hi ${userName || ''},\n\nUse this 6-digit code to reset your password: ${otp}\n\nThis code expires in ${ttlMinutes} minutes.\n\nIf you didn't request this, ignore this email or contact support.`;
+  const html = generateResetHTMLEmail(userName, otp, ttlMinutes, platformName);
+  return module.exports.sendEmail(to, subject, text, html);
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import config from '../../../config';
+import { Box, Paper, Avatar, Typography, Button } from '@mui/material';
 
 const MentorshipRequests = () => {
   const [requests, setRequests] = useState([]);
@@ -17,13 +18,15 @@ const MentorshipRequests = () => {
       const token = localStorage.getItem('token');
       console.log('Auth token:', token ? 'Present' : 'Missing');
 
-      // First check if we have any students
-      const studentsResponse = await axios.get(`${config.API_URL}/users/alumni`, {
+      // First check if we have any students (use mentorship route which lists students)
+      // NOTE: previously this was calling `/users/alumni` which returns alumni — use
+      // `/mentorship/list-students` to get actual student users for test creation.
+      const studentsResponse = await axios.get(`${config.API_URL}/mentorship/list-students`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      console.log('Found students:', studentsResponse.data);
-      
+
+      console.log('Found students (from mentorship/list-students):', studentsResponse.data);
+
       if (studentsResponse.data && studentsResponse.data.length > 0) {
         // Create a test request with the first student
         await createTestRequest(studentsResponse.data[0]._id);
@@ -102,7 +105,8 @@ const MentorshipRequests = () => {
 
   const handleStatusUpdate = async (requestId, status) => {
     try {
-      await axios.put(`${config.API_URL}/mentorship/${requestId}/status`, { status }, {
+      // Backend expects PATCH for updating request status (route defined as PATCH)
+      await axios.patch(`${config.API_URL}/mentorship/${requestId}/status`, { status }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       fetchMentorshipRequests();
@@ -113,69 +117,53 @@ const MentorshipRequests = () => {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
+    return <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>Loading...</Box>;
   }
 
   if (error) {
-    return <div className="text-red-500 text-center p-4">{error}</div>;
+    return <Box sx={{ color: 'error.main', textAlign: 'center', p: 2 }}>{error}</Box>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-2xl font-bold mb-6">Mentorship Requests</h2>
-      
+    <Box sx={{ py: 3 }}>
+      <Typography variant="h4" sx={{ mb: 3, fontWeight: 'bold' }}>Mentorship Requests</Typography>
+
       {requests.length === 0 ? (
-        <div className="text-center text-gray-500">No mentorship requests found</div>
+        <Typography color="text.secondary">No mentorship requests found</Typography>
       ) : (
-        <div className="space-y-4">
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           {requests.map((request) => (
-            <div key={request._id} className="bg-white rounded-lg shadow-md p-4 mb-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
+            <Paper key={request._id} elevation={2} sx={{ p: 2 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   {request.student?.profilePicture ? (
-                    <img
-                      src={request.student.profilePicture}
-                      alt={request.student.name}
-                      className="w-12 h-12 rounded-full"
-                    />
+                    <Avatar src={request.student.profilePicture} alt={request.student?.name} />
                   ) : (
-                    <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-gray-500 text-lg">
-                        {request.student?.name?.charAt(0) || '?'}
-                      </span>
-                    </div>
+                    <Avatar>{request.student?.name?.charAt(0) || '?'}</Avatar>
                   )}
-                  <div>
-                    <h3 className="font-semibold">{request.student?.name || 'Unknown Student'}</h3>
-                    <p className="text-gray-600">{request.student?.email || 'No email provided'}</p>
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleStatusUpdate(request._id, 'accepted')}
-                    className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => handleStatusUpdate(request._id, 'rejected')}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                  >
-                    Reject
-                  </button>
-                </div>
-              </div>
+                  <Box>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>{request.student?.name || 'Unknown Student'}</Typography>
+                    <Typography variant="body2" color="text.secondary">{request.student?.email || 'No email provided'}</Typography>
+                  </Box>
+                </Box>
+
+                <Box>
+                  <Button variant="contained" color="success" size="small" sx={{ mr: 1 }} onClick={() => handleStatusUpdate(request._id, 'accepted')}>Accept</Button>
+                  <Button variant="contained" color="error" size="small" onClick={() => handleStatusUpdate(request._id, 'rejected')}>Reject</Button>
+                </Box>
+              </Box>
+
               {request.message && (
-                <p className="mt-2 text-gray-700">{request.message}</p>
+                <Typography sx={{ mt: 1 }}>{request.message}</Typography>
               )}
-              <p className="mt-2 text-sm text-gray-500">
+              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                 Requested on: {new Date(request.requestedAt).toLocaleDateString()}
-              </p>
-            </div>
+              </Typography>
+            </Paper>
           ))}
-        </div>
+        </Box>
       )}
-    </div>
+    </Box>
   );
 };
 

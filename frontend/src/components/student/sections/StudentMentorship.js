@@ -80,15 +80,34 @@ function StudentMentorship() {
         // Create a map of mentorId to request status and request object
         const requestsMap = {};
         response.data.forEach(request => {
-          const mentorId = request.mentorId._id || request.mentorId;
-          requestsMap[mentorId] = {
-            status: request.status,
-            requestId: request._id,
-            updatedAt: request.updatedAt,
-            message: request.message
+          // Support multiple shapes returned by backend:
+          // - { mentorId: ObjectId or populated User, ... }
+          // - { mentor: { _id, name, ... }, student: {...}, ... }
+          let mentorId = null;
+          if (request.mentorId) {
+            // mentorId may be an object (populated) or a raw id
+            mentorId = request.mentorId._id || request.mentorId;
+          } else if (request.mentor) {
+            mentorId = request.mentor._id || request.mentor;
+          }
+
+          // If we still don't have a mentorId, try request.requestedBy or skip
+          if (!mentorId) {
+            console.warn('Skipping request with missing mentor id:', request);
+            return;
+          }
+
+          // Normalize to string key
+          const mentorKey = String(mentorId);
+
+          requestsMap[mentorKey] = {
+            status: request.status || request.requestStatus || 'pending',
+            requestId: request._id || request.requestId || null,
+            updatedAt: request.updatedAt || request.requestedAt || null,
+            message: request.message || ''
           };
         });
-        
+
         // Update the state with the latest request data
         setMentorshipRequests(requestsMap);
       }

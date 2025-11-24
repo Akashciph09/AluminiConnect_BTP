@@ -15,8 +15,10 @@ const auth = async (req, res, next) => {
 
         const verified = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
         
-        // Set user data from token - support both formats
+        // Set user data from token - include multiple keys for compatibility
+        // Some routes refer to `req.user.id`, others use `req.user._id` or `req.user.userId`.
         req.user = {
+            id: verified.userId,
             _id: verified.userId,
             userId: verified.userId, // For backward compatibility
             role: verified.role
